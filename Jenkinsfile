@@ -1,6 +1,9 @@
 pipeline {
     agent any
 
+    environment {
+        GITHUB_TOKEN = credentials('haivutuan93-access-token')
+    }
     stages {
         stage('Build') {
             steps {
