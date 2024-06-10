@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        LOG_DIR = "/var/log/jenkins"
+    }
+
     stages {
         stage('Build') {
             steps {
@@ -11,10 +15,10 @@ pipeline {
         
         stage('Deploy') {
             steps {
-                // Chạy ứng dụng với nohup
-                sh 'nohup java -jar target/demo-0.0.1-SNAPSHOT.jar --server.port=80 > app.log 2>&1 &'
-                // Hiển thị log trong console của Jenkins
-                sh 'tail -f app.log'
+                // Tạo thư mục log nếu chưa tồn tại
+                sh 'mkdir -p $LOG_DIR'
+                // Chạy ứng dụng với nohup và lưu log vào volume đã mount
+                sh 'nohup java -jar target/demo-0.0.1-SNAPSHOT.jar --server.port=80 > $LOG_DIR/app.log 2>&1 &'
             }
         }
     }
