@@ -2,27 +2,14 @@ pipeline {
     agent any
 
     environment {
-        KUBECONFIG_PATH = ''
-        DOCKER_CREDENTIALS_ID = ''
-        DOCKER_IMAGE = ''
-        EKS_CLUSTER_NAME = ''
-        EKS_REGION = ''
+        DOCKER_CREDENTIALS_ID = 'dockerhub-credentials'
+        DOCKER_IMAGE = 'haivutuan93/java-app-demo'
+        EKS_CLUSTER_NAME = 'docker-desktop'
+        EKS_REGION = 'us-west-2' // Example value, not used for Docker Desktop
+        KUBECONFIG_PATH = '~/.kube/config' // Replace with the actual path, usually ~/.kube/config
     }
 
     stages {
-        stage('Initialize') {
-            steps {
-                script {
-                    def properties = readProperties file: 'Jenkins.properties'
-                    env.DOCKER_CREDENTIALS_ID = properties['DOCKER_CREDENTIALS_ID']
-                    env.DOCKER_IMAGE = properties['DOCKER_IMAGE']
-                    env.EKS_CLUSTER_NAME = properties['EKS_CLUSTER_NAME']
-                    env.EKS_REGION = properties['EKS_REGION']
-                    env.KUBECONFIG_PATH = properties['KUBECONFIG_PATH']
-                }
-            }
-        }
-
         stage('Build') {
             steps {
                 script {
@@ -39,7 +26,7 @@ pipeline {
                     sh "docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} ."
 
                     echo "Logging into Docker Hub..."
-                    withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                         sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
                     }
 
