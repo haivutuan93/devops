@@ -5,8 +5,10 @@ pipeline {
         DOCKER_CREDENTIALS_ID = 'dockerhub-credentials'
         DOCKER_IMAGE = 'haivutuan93/java-app-demo'
         EKS_CLUSTER_NAME = 'docker-desktop'
-        EKS_REGION = 'us-west-2' // Example value, not used for Docker Desktop
-        KUBECONFIG_PATH = '~/.kube/config' // Replace with the actual path, usually ~/.kube/config
+        EKS_REGION = 'us-west-2'
+        KUBECONFIG_PATH = '/path/to/kubeconfig'
+        DOCKER_CERT_PATH = '/certs/client'
+        DOCKER_TLS_VERIFY = '1'
     }
 
     stages {
