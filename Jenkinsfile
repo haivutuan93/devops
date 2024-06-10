@@ -15,6 +15,16 @@ pipeline {
         
         stage('Deploy') {
             steps {
+                // Dừng ứng dụng Java cũ nếu đang chạy
+                sh '''
+                    OLD_PID=$(ps -ef | grep '[j]ava -jar target/demo-0.0.1-SNAPSHOT.jar' | awk '{print $2}')
+                    if [ -n "$OLD_PID" ]; then
+                        echo "Stopping old application with PID $OLD_PID"
+                        kill -9 $OLD_PID
+                    else
+                        echo "No old application running"
+                    fi
+                '''
                 // Copy script vào container
                 writeFile file: 'start_app.sh', text: '''
                     #!/bin/bash
