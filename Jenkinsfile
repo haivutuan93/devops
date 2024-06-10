@@ -1,59 +1,18 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_CREDENTIALS_ID = 'dockerhub-credentials'
-        DOCKER_IMAGE = 'haivutuan93/java-app-demo'
-        EKS_CLUSTER_NAME = 'docker-desktop'
-        EKS_REGION = 'us-west-2'
-        KUBECONFIG_PATH = '/path/to/kubeconfig'
-        DOCKER_CERT_PATH = '/certs/client'
-        DOCKER_TLS_VERIFY = '1'
-    }
-
     stages {
         stage('Build') {
             steps {
-                script {
-                    echo "Building the Java application..."
-                    sh 'mvn clean install'
-                }
+                sh 'echo $GITHUB_TOKEN'
+                sh 'mvn clean install'
             }
         }
-
-        stage('Docker Build and Push') {
+        
+        stage('Deploy') {
             steps {
-                script {
-                    echo "Building Docker image..."
-                    sh "docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} ."
-
-                    echo "Logging into Docker Hub..."
-                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
-                    }
-
-                    echo "Pushing Docker image to Docker Hub..."
-                    sh "docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}"
-                }
+                sh 'java -jar target/demo-0.0.1-SNAPSHOT.jar --server.port=80 > app.log 2>&1 &'
             }
-        }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                script {
-                    echo "Deploying to Kubernetes..."
-                    sh """
-                        export KUBECONFIG=${KUBECONFIG_PATH}
-                        kubectl set image deployment/your-deployment your-container=${DOCKER_IMAGE}:${BUILD_NUMBER}
-                    """
-                }
-            }
-        }
-    }
-
-    post {
-        always {
-            cleanWs()
         }
     }
 }
