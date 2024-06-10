@@ -11,7 +11,10 @@ pipeline {
         
         stage('Deploy') {
             steps {
-                sh 'java -jar target/demo-0.0.1-SNAPSHOT.jar --server.port=80 > app.log 2>&1 &'
+                // Chạy ứng dụng với nohup
+                sh 'nohup java -jar target/demo-0.0.1-SNAPSHOT.jar --server.port=80 > app.log 2>&1 &'
+                // Hiển thị log trong console của Jenkins
+                sh 'tail -f app.log'
             }
         }
     }
