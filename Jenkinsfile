@@ -15,8 +15,12 @@ pipeline {
         
         stage('Deploy') {
             steps {
-                // Dừng ứng dụng Java cũ nếu đang chạy
-                sh '''
+                // Copy script vào container
+                writeFile file: 'start_app.sh', text: '''
+                    #!/bin/bash
+                    LOG_DIR="/var/log/jenkins"
+                    
+                    # Dừng ứng dụng Java cũ nếu đang chạy
                     OLD_PID=$(ps -ef | grep '[j]ava -jar target/demo-0.0.1-SNAPSHOT.jar' | awk '{print $2}')
                     if [ -n "$OLD_PID" ]; then
                         echo "Stopping old application with PID $OLD_PID"
@@ -24,13 +28,13 @@ pipeline {
                     else
                         echo "No old application running"
                     fi
-                '''
-                // Copy script vào container
-                writeFile file: 'start_app.sh', text: '''
-                    #!/bin/bash
-                    LOG_DIR="/var/log/jenkins"
+                    
+                    # Tạo thư mục log nếu chưa tồn tại
                     mkdir -p $LOG_DIR
+
+                    # Chạy ứng dụng mới với nohup và disown để chạy ngầm
                     nohup java -jar target/demo-0.0.1-SNAPSHOT.jar --server.port=80 > $LOG_DIR/app.log 2>&1 &
+                    disown
                 '''
                 // Đảm bảo script có quyền thực thi
                 sh 'chmod +x start_app.sh'
