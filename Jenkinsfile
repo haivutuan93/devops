@@ -32,7 +32,6 @@ pipeline {
                     # Tạo thư mục log nếu chưa tồn tại
                     mkdir -p $LOG_DIR
 
-                    # Chạy ứng dụng mới với nohup và disown để chạy ngầm
                     nohup java -jar target/demo-0.0.1-SNAPSHOT.jar --server.port=80 > $LOG_DIR/app.log 2>&1 &
                 '''
                 // Đảm bảo script có quyền thực thi
