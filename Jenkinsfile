@@ -22,6 +22,7 @@ pipeline {
 
         stage('Build') {
             steps {
+                sh 'echo Building...'
                 sh 'mvn clean install'
             }
         }
@@ -29,6 +30,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
+                    sh 'echo Deploying...'
                     // stop.sh
                     writeFile file: 'stop_app.sh', text: '''
                         #!/bin/bash
