@@ -6,9 +6,15 @@ pipeline {
             steps {
                 script {
                     // Load file .env
-                    def envProps = readProperties file: '.env'
-                    envProps.each { key, value ->
-                        env[key] = value
+                    def envFileContent = readFile '.env'
+                    def envVars = envFileContent.split('\n')
+                    envVars.each { line ->
+                        if (line.trim()) {
+                            def parts = line.split('=')
+                            def key = parts[0].trim()
+                            def value = parts[1].trim()
+                            env[key] = value
+                        }
                     }
                 }
             }
