@@ -8,12 +8,12 @@ pipeline {
                     // Load file .env
                     def envFileContent = readFile '.env'
                     def envVars = envFileContent.split('\n')
-                    envVars.each { line ->
+                    for (line in envVars) {
                         if (line.trim()) {
                             def parts = line.split('=')
                             def key = parts[0].trim()
                             def value = parts[1].trim()
-                            env[key] = value
+                            env."${key}" = value
                         }
                     }
                 }
