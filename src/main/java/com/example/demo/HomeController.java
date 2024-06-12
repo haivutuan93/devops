@@ -18,7 +18,7 @@ public class HomeController {
     @GetMapping("/{name}")
     public String hello(@PathVariable String name){
         log.info("Request with name {}", name);
-        return "Hello " + name;
+        return "Test app java " + name + "Done test";
     }
 
 }
