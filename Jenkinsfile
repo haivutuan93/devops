@@ -1,6 +1,15 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_CREDENTIALS_ID = 'haivt-dockerhub-user-pass	' 
+        DOCKER_IMAGE_NAME = 'haivutuan93/demo-java-app'
+        DOCKER_IMAGE_TAG = 'latest'
+        KUBECONFIG_CREDENTIALS_ID = 'your-kubeconfig-credentials-id'
+        CLUSTER_NAME = 'your-cluster-name'
+        AWS_REGION = 'your-aws-region'
+    }
+
     stages {
         stage('Load Env') {
             steps {
@@ -26,46 +35,40 @@ pipeline {
                 sh 'mvn clean install'
             }
         }
-        
-        stage('Deploy') {
+
+        stage('Build Image') {
             steps {
                 script {
-                    sh 'echo Deploying...'
-                    // stop.sh
-                    writeFile file: 'stop_app.sh', text: '''
-                        #!/bin/bash
-                        
-                        # Dừng ứng dụng Java cũ nếu đang chạy
-                        OLD_PID=$(ps -ef | grep '[j]ava -jar target/demo-0.0.1-SNAPSHOT.jar' | awk '{print $2}')
-                        if [ -n "$OLD_PID" ]; then
-                            echo "Stopping old application with PID $OLD_PID"
-                            kill -9 $OLD_PID
-                        else
-                            echo "No old application running"
-                        fi
-                    '''
-
-                    sh 'chmod +x stop_app.sh'
-                    sh './stop_app.sh'
-                    
-                    // Wait 5s
-                    sh 'sleep 5'
-                    
-                    // start.sh
-                    writeFile file: 'start_app.sh', text: """
-                        #!/bin/bash
-                        LOG_DIR="${env.LOG_DIR}"
-                        
-                        # Tạo thư mục log nếu chưa tồn tại
-                        mkdir -p \$LOG_DIR
-
-                        # Chạy ứng dụng mới với nohup và disown để chạy ngầm
-                        nohup java -jar target/demo-0.0.1-SNAPSHOT.jar --server.port=80 > \$LOG_DIR/app.log 2>&1 &
+                    sh 'echo Building Docker Image...'
+                    sh """
+                    docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} --build-arg JAR_FILE=target/demo-0.0.1-SNAPSHOT.jar .
                     """
+                }
+            }
+        }
 
-                    sh 'chmod +x start_app.sh'
-                    sh './start_app.sh'
-                    
+        stage('Push Image') {
+            steps {
+                script {
+                    docker.withRegistry('', DOCKER_CREDENTIALS_ID) {
+                        sh 'echo Pushing Docker Image...'
+                        sh "docker push ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to EKS') {
+            steps {
+                script {
+                    withCredentials([file(credentialsId: KUBECONFIG_CREDENTIALS_ID, variable: 'KUBECONFIG')]) {
+                        sh """
+                        export KUBECONFIG=${KUBECONFIG}
+                        kubectl config use-context arn:aws:eks:${AWS_REGION}:${CLUSTER_NAME}
+                        kubectl set image deployment/demo demo=${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
+                        kubectl rollout status deployment/demo
+                        """
+                    }
                 }
             }
         }
