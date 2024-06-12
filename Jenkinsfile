@@ -5,9 +5,9 @@ pipeline {
         DOCKER_CREDENTIALS_ID = 'haivt-dockerhub-user-pass	' 
         DOCKER_IMAGE_NAME = 'haivutuan93/demo-java-app'
         DOCKER_IMAGE_TAG = 'latest'
-        KUBECONFIG_CREDENTIALS_ID = 'your-kubeconfig-credentials-id'
-        CLUSTER_NAME = 'your-cluster-name'
-        AWS_REGION = 'your-aws-region'
+        KUBECONFIG_CREDENTIALS_ID = 'kubeconfig-docker-desktop'
+        CLUSTER_NAME = 'docker-desktop'
+        //AWS_REGION = 'your-aws-region'
     }
 
     stages {
@@ -58,13 +58,13 @@ pipeline {
             }
         }
 
-        stage('Deploy to EKS') {
+        stage('Deploy to K8s') {
             steps {
                 script {
                     withCredentials([file(credentialsId: KUBECONFIG_CREDENTIALS_ID, variable: 'KUBECONFIG')]) {
                         sh """
                         export KUBECONFIG=${KUBECONFIG}
-                        kubectl config use-context arn:aws:eks:${AWS_REGION}:${CLUSTER_NAME}
+                        kubectl config use-context ${CLUSTER_NAME}
                         kubectl set image deployment/demo demo=${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
                         kubectl rollout status deployment/demo
                         """
