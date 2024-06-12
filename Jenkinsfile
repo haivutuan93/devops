@@ -2,12 +2,11 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_CREDENTIALS_ID = 'haivt-dockerhub-user-pass	' 
+        DOCKER_CREDENTIALS_ID = 'haivt-dockerhub-user-pass'
         DOCKER_IMAGE_NAME = 'haivutuan93/demo-java-app'
         DOCKER_IMAGE_TAG = 'latest'
-        KUBECONFIG_CREDENTIALS_ID = 'kubeconfig-docker-desktop'
+        KUBECONFIG_PATH = '/var/jenkins_home/.kube/config' // Đường dẫn tới kubeconfig trong container Jenkins
         CLUSTER_NAME = 'docker-desktop'
-        //AWS_REGION = 'your-aws-region'
     }
 
     stages {
@@ -61,9 +60,8 @@ pipeline {
         stage('Deploy to K8s') {
             steps {
                 script {
-                    withCredentials([file(credentialsId: KUBECONFIG_CREDENTIALS_ID, variable: 'KUBECONFIG')]) {
+                    withEnv(["KUBECONFIG=${KUBECONFIG_PATH}"]) {
                         sh """
-                        export KUBECONFIG=${KUBECONFIG}
                         kubectl config use-context ${CLUSTER_NAME}
                         kubectl set image deployment/demo demo=${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
                         kubectl rollout status deployment/demo
