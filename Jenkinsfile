@@ -65,6 +65,19 @@ pipeline {
             }
         }
 
+        stage('Update Deployment YAML') {
+            steps {
+                script {
+                    def yaml = readFile(file: 'k8s/deployment-service.yaml')
+                    def newYaml = yaml.replaceAll(/\${DOCKER_IMAGE_NAME}/, "${env.DOCKER_IMAGE_NAME}")
+                                     .replaceAll(/\${DOCKER_IMAGE_TAG}/, "${env.DOCKER_IMAGE_TAG}")
+                    echo "Updated YAML: ${newYaml}"
+                    echo "env.DOCKER_IMAGE_NAME: ${env.DOCKER_IMAGE_NAME} && env.DOCKER_IMAGE_TAG: ${env.DOCKER_IMAGE_TAG}"
+                    writeFile(file: 'k8s/deployment-service.yaml', text: newYaml)
+                }
+            }
+        }
+
         stage('Deploy to K8s') {
             steps {
                 script {
