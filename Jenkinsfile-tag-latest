@@ -2,8 +2,9 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_CREDENTIALS_ID = 'haivt-dockerhub-user-pass' 
+        DOCKER_CREDENTIALS_ID = 'haivt-dockerhub-user-pass'
         DOCKER_IMAGE_NAME = 'haivutuan93/demo-java-app'
+        DOCKER_IMAGE_TAG = 'latest'
         KUBECONFIG_PATH = '/var/jenkins_home/.kube/config' // Đường dẫn tới kubeconfig trong container Jenkins
         CLUSTER_NAME = 'docker-desktop'
     }
@@ -35,9 +36,6 @@ pipeline {
         }
 
         stage('Build Image') {
-            environment {
-                DOCKER_IMAGE_TAG = "${env.BUILD_NUMBER}" // Sử dụng số build của Jenkins
-            }
             steps {
                 script {
                     sh 'echo Building Docker Image...'
