@@ -34,15 +34,21 @@ pipeline {
             }
         }
 
-        stage('Build Image') {
-            environment {
-                DOCKER_IMAGE_TAG = "${env.BUILD_NUMBER}" // Sử dụng số build của Jenkins
+        stage('Set Docker Image Tag') {
+            steps {
+                script {
+                    env.GIT_COMMIT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    env.DOCKER_IMAGE_TAG = "1.0.${env.BUILD_NUMBER}-${env.GIT_COMMIT}" // Sử dụng số build và Git commit SHA
+                }
             }
+        }
+
+        stage('Build Image') {
             steps {
                 script {
                     sh 'echo Building Docker Image...'
                     sh """
-                    docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} --build-arg JAR_FILE=target/demo-0.0.1-SNAPSHOT.jar .
+                    docker build -t ${env.DOCKER_IMAGE_NAME}:${env.DOCKER_IMAGE_TAG} --build-arg JAR_FILE=target/demo-0.0.1-SNAPSHOT.jar .
                     """
                 }
             }
@@ -51,9 +57,9 @@ pipeline {
         stage('Push Image') {
             steps {
                 script {
-                    docker.withRegistry('', DOCKER_CREDENTIALS_ID) {
+                    docker.withRegistry('', env.DOCKER_CREDENTIALS_ID) {
                         sh 'echo Pushing Docker Image...'
-                        sh "docker push ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
+                        sh "docker push ${env.DOCKER_IMAGE_NAME}:${env.DOCKER_IMAGE_TAG}"
                     }
                 }
             }
@@ -62,11 +68,11 @@ pipeline {
         stage('Deploy to K8s') {
             steps {
                 script {
-                    withEnv(["KUBECONFIG=${KUBECONFIG_PATH}"]) {
+                    withEnv(["KUBECONFIG=${env.KUBECONFIG_PATH}"]) {
                         sh """
-                        kubectl config use-context ${CLUSTER_NAME}
+                        kubectl config use-context ${env.CLUSTER_NAME}
                         kubectl apply -f k8s/deployment-service.yaml
-                        kubectl set image deployment/demo demo=${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
+                        kubectl set image deployment/demo demo=${env.DOCKER_IMAGE_NAME}:${env.DOCKER_IMAGE_TAG}
                         kubectl rollout status deployment/demo
                         """
                     }
