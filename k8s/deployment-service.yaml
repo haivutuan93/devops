@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: demo
-        image: haivutuan93/demo-java-app:latest
+        image: haivutuan93/demo-java-app:${DOCKER_IMAGE_TAG}
         imagePullPolicy: Always
         ports:
         - containerPort: 80

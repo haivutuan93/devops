@@ -72,8 +72,6 @@ pipeline {
                         sh """
                         kubectl config use-context ${env.CLUSTER_NAME}
                         kubectl apply -f k8s/deployment-service.yaml
-                        kubectl set image deployment/demo demo=${env.DOCKER_IMAGE_NAME}:${env.DOCKER_IMAGE_TAG}
-                        kubectl rollout status deployment/demo
                         """
                     }
                 }

@@ -19,7 +19,7 @@ public class HomeController {
     @GetMapping("/{name}")
     public ResponseEntity<String> hello(@PathVariable String name){
         log.info("Request with name {}", name);
-        return ResponseEntity.ok("This is app Demo from K8s for" + name);
+        return ResponseEntity.ok("This is app Demo from K8s for" + name + "updated");
     }
 
 }
